@@ -147,13 +147,6 @@ HTML_TEMPLATE = """
                 <div class="label">Analysis Report</div>
                 <div class="mono">{{ report }}</div>
             </div>
-
-            {% if ai_label %}
-            <div class="card">
-                <div><span class="label">AI Model Label:</span> {{ ai_label }}</div>
-                <div style="margin-top:8px;"><span class="label">AI Confidence:</span> {{ ai_confidence }}</div>
-            </div>
-            {% endif %}
         </div>
         {% endif %}
 
@@ -164,6 +157,34 @@ HTML_TEMPLATE = """
 </body>
 </html>
 """
+
+
+def apply_hybrid_scoring(result: dict, ai_result: dict) -> dict:
+    """
+    Combine rule-based score with AI model signal.
+    """
+    final_score = result["misinformation_score"]
+
+    if ai_result["ai_flag"]:
+        final_score += 2
+        if "AI_MODEL_FLAG" not in result["triggers_found"]:
+            result["triggers_found"].append("AI_MODEL_FLAG")
+    elif ai_result["ai_confidence"] >= 0.45:
+        final_score += 1
+        if "AI_SUSPICION_SIGNAL" not in result["triggers_found"]:
+            result["triggers_found"].append("AI_SUSPICION_SIGNAL")
+
+    result["misinformation_score"] = final_score
+    return result
+
+
+def map_risk_level(score: int):
+    if score >= 4:
+        return "High", "high"
+    elif score >= 2:
+        return "Medium", "medium"
+    else:
+        return "Low", "low"
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -177,39 +198,33 @@ def index():
     if request.method == "POST":
         user_text = request.form["text"].strip()
 
-        result = detector.analyze(user_text)
-        ai_result = ai_detector.predict(user_text)
+        if user_text:
+            result = detector.analyze(user_text)
+            ai_result = ai_detector.predict(user_text)
 
-        ai_label = ai_result["ai_label"]
-        ai_confidence = round(ai_result["ai_confidence"], 3)
+            ai_label = ai_result["ai_label"]
+            ai_confidence = round(ai_result["ai_confidence"], 3)
 
-        if ai_result["ai_flag"]:
-            result["misinformation_score"] += 2
-            result["triggers_found"].append("AI_MODEL_FLAG")
+            result = apply_hybrid_scoring(result, ai_result)
 
-        report = explainer.generate_report(
-            result["misinformation_score"],
-            result["triggers_found"]
-        )
-
-        if result["misinformation_score"] >= 5:
-            risk_level = "High"
-            risk_class = "high"
-        elif result["misinformation_score"] >= 3:
-            risk_level = "Medium"
-            risk_class = "medium"
-        else:
-            risk_level = "Low"
-            risk_class = "low"
-
-        with open("analysis_log.txt", "a", encoding="utf-8") as log:
-            log.write(
-                f"{datetime.now()} | "
-                f"Score:{result['misinformation_score']} | "
-                f"AI_Label:{ai_label} | "
-                f"AI_Confidence:{ai_confidence} | "
-                f"Text:{user_text}\n"
+            report = explainer.generate_report(
+                result["misinformation_score"],
+                result["triggers_found"],
+                ai_label,
+                ai_confidence
             )
+
+            risk_level, risk_class = map_risk_level(result["misinformation_score"])
+
+            with open("analysis_log.txt", "a", encoding="utf-8") as log:
+                log.write(
+                    f"{datetime.now()} | "
+                    f"Score:{result['misinformation_score']} | "
+                    f"AI_Label:{ai_label} | "
+                    f"AI_Confidence:{ai_confidence} | "
+                    f"Triggers:{','.join(result['triggers_found']) if result['triggers_found'] else 'None'} | "
+                    f"Text:{user_text}\n"
+                )
 
     return render_template_string(
         HTML_TEMPLATE,
@@ -230,19 +245,30 @@ def api_analyze():
 
     user_text = data["text"].strip()
 
+    if not user_text:
+        return jsonify({"error": "Text cannot be empty"}), 400
+
     result = detector.analyze(user_text)
     ai_result = ai_detector.predict(user_text)
 
-    if ai_result["ai_flag"]:
-        result["misinformation_score"] += 2
-        result["triggers_found"].append("AI_MODEL_FLAG")
+    result = apply_hybrid_scoring(result, ai_result)
+    risk_level, _ = map_risk_level(result["misinformation_score"])
+
+    report = explainer.generate_report(
+        result["misinformation_score"],
+        result["triggers_found"],
+        ai_result["ai_label"],
+        round(ai_result["ai_confidence"], 3)
+    )
 
     return jsonify({
         "text": user_text,
+        "risk_level": risk_level,
         "misinformation_score": result["misinformation_score"],
         "triggers_found": result["triggers_found"],
         "ai_label": ai_result["ai_label"],
-        "ai_confidence": round(ai_result["ai_confidence"], 3)
+        "ai_confidence": round(ai_result["ai_confidence"], 3),
+        "report": report
     })
 
 

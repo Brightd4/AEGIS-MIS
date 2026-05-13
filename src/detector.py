@@ -10,7 +10,19 @@ class MisinformationDetector:
             "conspiracy": 2,
             "rigged": 1,
             "secret cure": 3,
-            "they don't want you to know": 3
+            "they don't want you to know": 3,
+            "secretly controlling": 2,
+            "hiding the truth": 2,
+            "they are hiding": 2,
+            "cover up": 2,
+            "hidden truth": 2,
+            "the truth is being hidden": 2,
+            "media is hiding": 2,
+            "being deceived": 2,
+            "deceived": 1,
+            "secret plan": 2,
+            "manipulating the public": 2,
+            "they are lying": 2
         }
 
     def analyze(self, text: str) -> dict:
@@ -19,7 +31,7 @@ class MisinformationDetector:
         lower_text = text.lower()
 
         for phrase, weight in self.trigger_weights.items():
-            # If single word → match whole word only
+            # Single word → match whole word only
             if " " not in phrase:
                 pattern = r"\b" + re.escape(phrase) + r"\b"
             else:
