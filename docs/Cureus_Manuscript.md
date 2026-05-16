@@ -39,7 +39,17 @@ The primary contributions of this work include:
 
 # Related Work
 
-[To be completed]
+Misinformation detection has become an important research area within natural language processing, cybersecurity, and information integrity. Early approaches to misinformation and fake news detection commonly relied on traditional machine learning methods such as Logistic Regression, Support Vector Machines, Naive Bayes, and feature engineering methods based on term frequency and inverse document frequency. These approaches remain useful in lightweight systems because they are computationally efficient and easier to interpret than many large deep learning models.
+
+A widely used benchmark in misinformation research is the LIAR dataset, introduced by Wang. The LIAR dataset contains short political statements labeled according to truthfulness categories and has been widely used for evaluating fake news and misinformation classification models. Although the dataset is challenging because of the short and context dependent nature of the statements, it remains useful for benchmarking text based misinformation detection systems.
+
+More recent work has explored deep learning and transformer based models for fake news detection. FakeBERT, proposed by Kaliyar and colleagues, combines BERT based language representation with deep learning layers for fake news detection in social media contexts. Transformer based models often improve semantic representation, but they can require more computational resources and may provide limited interpretability compared with simpler models.
+
+Explainable Artificial Intelligence has also become increasingly important in security sensitive AI systems. Adadi and Berrada provided a broad survey of explainable AI and emphasized the need to make black box systems more transparent and understandable. In misinformation detection, explainability is especially important because users and analysts need to understand why a statement is classified as suspicious or misleading.
+
+Recent studies and surveys continue to show that fake news detection remains a difficult problem because misinformation is context dependent, linguistically diverse, and often designed to exploit emotional or social biases. Reviews of machine learning and deep learning approaches show that while complex models may improve performance, challenges remain in interpretability, dataset bias, generalization, and real world deployment.
+
+AEGIS MIS builds on this body of work by focusing on a lightweight hybrid architecture that combines rule based analysis with TF IDF feature extraction and Logistic Regression classification. Rather than claiming to replace large scale misinformation detection systems, AEGIS MIS is positioned as an explainable research prototype that emphasizes transparency, reproducibility, and practical deployment simplicity.
 
 ---
 
