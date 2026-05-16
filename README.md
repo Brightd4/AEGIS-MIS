@@ -12,6 +12,40 @@
 The system is designed to address the growing challenge of misinformation by balancing performance with transparency.
 
 ---
+## Live Demo
+
+AEGIS MIS is deployed and publicly accessible below:
+
+https://aegis-mis.onrender.com
+
+---
+
+## Demo Screenshot
+
+![AEGIS Live Demo](screenshots/aegis_live_demo.png)
+
+---
+
+## Example Input
+
+```text
+BREAKING: Scientists confirm the government is hiding a secret cure for cancer. Share this immediately before it gets removed.
+```
+
+---
+
+## Example Output
+
+Risk Level: HIGH
+
+AI Label: Potential Misinformation
+
+Detected Pattern:
+secret cure
+
+AI Confidence: 0.669
+
+---
 
 ## 🔍 Overview
 
